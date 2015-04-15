@@ -4,5 +4,3 @@ Script Python pour l'indexation semi-automatique de données historiques dans Ne
 Auteurs:
 - Matthieu Quantin
 - Benjamin Hervy
-
-Test de push simultanés
