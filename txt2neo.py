@@ -3,13 +3,14 @@
 
 
 from os import listdir
-from os.path import isfile,join
+from os.path import isfile, join
 from py2neo import Graph, Node, Relationship
 from Fiche import Fiche
 from Source import Source
 
-def analyseFiche(nom_fichier,dossier,graph):
-    with open(join(dossier,nom_fichier)) as f:
+
+def analyseFiche(nom_fichier, dossier, graph):
+    with open(join(dossier, nom_fichier)) as f:
         content = f.readlines()
         content = [x.strip('\n') for x in content]
         fiche_contenu_list = []
@@ -35,17 +36,18 @@ def analyseFiche(nom_fichier,dossier,graph):
                     fiche_contenu_list.append(line)
         fiche_contenu = '\n'.join(fiche_contenu_list)
         fiche = Fiche(fiche_id, fiche_titre, fiche_auteur,
-                    fiche_contenu, fiche_date, fiche_references)
+                      fiche_contenu, fiche_date, fiche_references)
         fiche.create_node(graph)
     return fiche
-    
+
+
 def ficheDocumentation(fiche, type_doc, dossier, nom_fichier, graph):
-    with open(join(dossier,nom_fichier)) as ref_file:
+    with open(join(dossier, nom_fichier)) as ref_file:
         content = ref_file.readlines()
         content = [x.strip('\n') for x in content]
         for line in content:
             if (type_doc == "references"):
-                ref_id,_,ref_leg = line.partition('@')
+                ref_id, _, ref_leg = line.partition('@')
                 if ref_id in fiche.get_references():
                     reference_trouvee = Source('Reference', ref_leg)
                     reference_trouvee.create_source(graph)
@@ -59,20 +61,24 @@ def ficheDocumentation(fiche, type_doc, dossier, nom_fichier, graph):
                     reference_trouvee = Source('Image', legende, filename)
                     reference_trouvee.create_source(graph)
                     fiche.create_doc(graph, reference_trouvee, '')
-    
+
+
 def main(dossier, ignore_files):
-	graph_db = Graph()
-	
-	# Pour chaque fiche, analyser son contenu et créer les noeuds/liens correspondants
-	files = [ f for f in listdir(dossier) if isfile(join(dossier,f)) ]
-	
-	for fiche in files:
-	    if (fiche not in ignore_files):
-	        fiche_analysee = analyseFiche(fiche, dossier, graph_db)
-	        ficheDocumentation(fiche_analysee, "references", dossier, ignore_files[0], graph_db)
-	        ficheDocumentation(fiche_analysee, "images", dossier, ignore_files[1], graph_db)
+    graph_db = Graph()
+
+    # Pour chaque fiche, analyser son contenu
+    # et créer les noeuds/liens correspondants
+    files = [f for f in listdir(dossier) if isfile(join(dossier, f))]
+
+    for fiche in files:
+        if (fiche not in ignore_files):
+            fiche_analysee = analyseFiche(fiche, dossier, graph_db)
+            ficheDocumentation(fiche_analysee, "references", dossier,
+                               ignore_files[0], graph_db)
+            ficheDocumentation(fiche_analysee, "images", dossier,
+                               ignore_files[1], graph_db)
 
 if __name__ == "__main__":
     dossier = "fiches"
     ignore_files = ["references.txt", "images.txt"]
-    main(dossier,ignore_files)
+    main(dossier, ignore_files)
