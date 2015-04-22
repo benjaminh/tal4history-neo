@@ -8,45 +8,53 @@ from Source import Source
 class Fiche(object):
 
     '''Modèle de noeud relatif aux fiches descriptives
-    La classe possède deux méthodes pour créer des fiches
+    La classe possède 4 méthodes pour créer des fiches
     et des relations entre fiches
     '''
-
-    def __init__(self, node):
-        self._node = node
-
-    @classmethod
-    def create_node(self, graph_db, tmp_id, titre, auteur,
-                    contenu, date_creation):
-
+    
+    def __init__(self, tmp_id, titre, auteur,
+                    contenu, date_creation, references):
         self.node_type = "Fiche_descriptive"
+        self.tmp_id = tmp_id
+        self.titre = titre
+        self.auteur = auteur
+        self.contenu = contenu
+        self.date_creation = date_creation
+        self.references = references
 
+    def create_node(self,graph_db):
         # Ajouter propriétés du type "modified" ?
-        fiche_properties = {'doc_position': tmp_id, 'titre': titre,
-                            'auteur': auteur, 'contenu': contenu, 'date_creation': date_creation}
+        fiche_properties = {'doc_position': self.tmp_id, 'titre': self.titre,
+                            'auteur': self.auteur, 'contenu': self.contenu, 'date_creation': self.date_creation}
         fiche_node = Node.cast(fiche_properties)
         fiche_node.labels.add(self.node_type)
-        graph_db.create(fiche_node)
+        self._node = fiche_node
+        graph_db.create(self._node)
 
-        return Fiche(fiche_node)
-
-    @classmethod
-    def create_rel(self, graph_db, fiche_liee, complement):
-        rel = Relationship.cast(self, ("correle_a",
-                                {"complement": complement}), fiche_liee)
+    def create_rel(self, graph_db, fiche_liee, complement, ponderation):
+        rel = Relationship.cast(self.node, ("correle_a",
+                                {"complement": complement,"ponderation": ponderation}), fiche_liee.node)
         graph_db.create(rel)
         
-    @classmethod
     def create_rel_recit(self, graph_db, fiche_liee, complement):
-        rel = Relationship.cast(self, ("recit_lineaire",
-                                {"complement": complement}), fiche_liee)
+        rel = Relationship.cast(self.node, ("recit_lineaire",
+                                {"complement": complement}), fiche_liee.node)
         graph_db.create(rel)
 
     def create_doc(self, graph_db, source, complement):
-        rel = Relationship.cast(source, ("documente",
-                                {"complement": complement}), self)
+        rel = Relationship.cast(source.node, ("documente",
+                                {"complement": complement}), self.node)
         graph_db.create(rel)
 
-    @property
-    def titre(self):
-        return self._node["titre"]
+    def get_tmp_id(self):
+        return self.tmp_id
+
+    def get_titre(self):
+        return self.titre
+
+    def get_references(self):
+        return self.references
+
+    @property        
+    def node(self):
+        return self._node

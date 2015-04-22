@@ -6,24 +6,29 @@ from py2neo import Graph, GraphError, Node, Relationship
 
 class Source(object):
 
-    def __init__(self, node):
-        self._node = node
-
-    @classmethod
-    def create_source(self, graph_db, type_source, filename, legende):
-
+    def __init__(self, type_source, legende, filename=''):
+        self.type_source = type_source
+        self.filename = filename
+        self.legende = legende
         self.node_type = "Source"
 
+    def create_source(self, graph_db):
+
         # Ajouter propriétés du type "modified" ?
-        source_properties = {'legende': legende, 'fichier': filename}
-        source_node = Node.cast(fiche_properties)
+        if self.filename != '':
+            source_properties = {'legende': self.legende, 'fichier': self.filename}
+        else:
+            source_properties = {'legende': self.legende}
+        source_node = Node.cast(source_properties)
         source_node.labels.add(self.node_type)
-        source_node.labels.add(type_source)
+        source_node.labels.add(self.type_source)
+        self._node = source_node
 
-        graph_db.create(source_node)
+        graph_db.create(self._node)
 
-        return Source(source_node)
+    def get_legende(self):
+        return self.legende
 
     @property
-    def legende(self):
-        return self._node["legende"]
+    def node(self):
+        return self._node
