@@ -59,8 +59,9 @@ target/
 # Perso stuff
 BeingClean/
 *-img/
+keywords/
 fiches/*
 old/
 *.tex
-ToDo.md
+*.csv
 *~

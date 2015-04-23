@@ -20,18 +20,25 @@ Rtitresubsubsection = re.compile(r'(?<=\\subsubsection{)(.*)(?=})', re.UNICODE) 
 Rtitreparagraph = re.compile(r'(?<=\\paragraph{)(.*)(?=})', re.UNICODE) #récupere le contenu (le titre)
 
 
-def EcrireSectionPrecedente(identifiant, taille, tailleMinimum, titreSection, ContenuTxtSection, identifiantsRefs):
+# créer la fiche qui contient tout les éléments amassés jusqu'à cette rupture (c'est à dire: créer la fiche correspondant à la section précédente)
+def EcrireSectionPrecedente(identifiant, taille, tailleMinimum, titreSection, ContenuTxtSection, identifiantsRefs, nomAuteur, datecreation):
+	print (identifiant + '\t' + str(taille))
 	if taille > tailleMinimum:
 		nomfichierFiche = 'fiches/fiche' + identifiant + '.txt'
 		with open(nomfichierFiche, 'w', encoding = 'utf8') as fiche:
-			fiche.write('fiche n° '+ identifiant +'\n')
-			fiche.write('titre: ' + titreSection + '\n\n\n')
+			fiche.write('fiche n° '+ identifiant + '\n')
+			fiche.write('titre: ' + titreSection + '\n')
+			fiche.write('auteur: ' + nomAuteur + '\n')
+			fiche.write('date: ' + datecreation+ '\n\n\n')
 			contenujoin = '\n'.join(ContenuTxtSection)
 			contenujoin = re.sub(RnombreuxSauts, "\n", contenujoin)
 			contenujoin = re.sub(Rfootnote, "", contenujoin)
 			fiche.write(contenujoin)
-			fiche.write('\n\n\nRéférences associées: '+ str(identifiantsRefs)) #au cas où... 
+			fiche.write('\n\n\nRéférences associées: ' )
+			for identifiantRef in identifiantsRefs:
+				fiche.write(str(identifiantRef) + ' ')
 			fiche.close()
+
 
 def CompteurMots(uneligne):
 	if uneligne[0] != '\n':
@@ -42,6 +49,7 @@ def CompteurMots(uneligne):
 		nombre = 0
 	return nombre
 
+
 def Image(identifiant, thisline, nextline, RnamePict):
 	PictName = re.findall(RnamePict, thisline)
 	if "caption" in nextline:
@@ -49,6 +57,7 @@ def Image(identifiant, thisline, nextline, RnamePict):
 	else:
 		PictLegende = ['Pas_de_legende']
 	Picts.write(identifiant + '@' + PictName[0] + "\@" + PictLegende[0] + '\n')
+
 
 def References(thisline, RefID):
 	RefIDLigne = []
@@ -61,7 +70,8 @@ def References(thisline, RefID):
 	return RefIDLigne
 
 
-def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
+####fonction principale qui est appelée par LaTeX2Fiche
+def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe, nom_auteur, date):
 	OrigineFileName = re.sub('.tex', '', OrigineFile)
 	extensionEtapePrec = '.Step' + str(step-1) + '.txt'
 	FichierPropre = 'BeingClean/' + OrigineFileName + extensionEtapePrec
@@ -69,7 +79,6 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
 	DossierImage = re.sub('_', '', OrigineFileName)
 	DossierImage = DossierImage + '-img/'
 	RpictName = re.compile(r"(?<=\\includegraphics{" + re.escape(DossierImage) + r')(.*)(?=})', re.UNICODE)
-	print ("(?<=\\includegraphics{" + re.escape(DossierImage) + r')(.*)(?=})')
 
 	with open(FichierPropre, 'r', encoding = 'utf8') as fichierpropre:
 		text = fichierpropre.readlines()
@@ -108,7 +117,7 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
 					contenutxt.append(titreparagraphe)
 			else:
 				if "\paragraph" in line: 
-					EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection)
+					EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection, nom_auteur, date) 
 					contenutxt = []
 					RefIDsection = []
 					NbMotsSect = 0
@@ -117,14 +126,14 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
 					parag += 1
 
 
-			if "\\" not in line[0]:
+			if "\\" not in line[0]: #capte les lignes de texte type 'contenu' mais pa les lignes commençant par \ (problème)
 				contenutxt.append(line)
 
-			if re.match(r'^\\footnote', line):
+			if re.match(r'^\\footnote', line): #capte les lignes qui commencent par une footnote (donc qui commencent par un \). C'est bizare mais ça existe 
 				contenutxt.append(line)
 
 			if "\section" in line: 
-				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection)
+				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection, nom_auteur, date)
 				contenutxt = []
 				RefIDsection = []
 				NbMotsSect = 0
@@ -136,7 +145,7 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
 				parag = 0
 
 			if "\subsection" in line:
-				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection)
+				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection, nom_auteur, date)
 				contenutxt = []
 				RefIDsection = []
 				NbMotsSect = 0
@@ -147,7 +156,7 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
 				parag = 0
 
 			if "\subsubsection" in line:
-				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection)
+				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection, nom_auteur, date)
 				contenutxt = []
 				RefIDsection = []
 				NbMotsSect = 0
@@ -157,7 +166,7 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe):
 				parag = 0
 
 			if conclusion: 
-				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection)
+				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection, nom_auteur, date)
 
 
 
