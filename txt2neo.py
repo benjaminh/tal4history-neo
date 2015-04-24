@@ -80,5 +80,5 @@ def main(dossier, ignore_files):
 
 if __name__ == "__main__":
     dossier = "fiches"
-    ignore_files = ["references.txt", "images.txt"]
+    ignore_files = ["references", "images"]
     main(dossier, ignore_files)

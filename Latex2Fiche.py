@@ -14,7 +14,7 @@ Auteur_du_document = 'Matthieu Quantin' #prénom nom
 Date_de_publication_du_document = '2014-06-04' # yyyy-mm-dd (format ISO8601 pour les date.)
 
 ##Options:
-Mot_apres_la_derniere_fiche = 'Conclusion générale' # pour écrire et arréter l'écriture de la dernière partie avant la conclusion... 
+Mot_apres_la_derniere_fiche = 'CONCLUSION GÉNÉRALE' # pour écrire et arréter l'écriture de la dernière partie avant la conclusion... 
 Taille_minimale = 150 #taille minimum d'une section pour en 'extraire' une fiche (en nombre de mots)
 decoupe_paragraphe = False  #mettre "True" pour considérer les paragraphes comme des subsubsubsection et en faire des fiches, ou bien mettre "False" pour les laisser dans des fiches mères
 

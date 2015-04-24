@@ -12,8 +12,8 @@ Rfootnote = re.compile(r'(\\footnote)([^}]*})', re.UNICODE) #récupere l'ensembl
 RcontenuFootnote = re.compile(r'(?<=\\footnote{)([^}]*)(?=})', re.UNICODE) # recupère le contenu de la footnote
 RcontenuFootnotetext = re.compile(r'(?<=\\footnotetext{)([^}]*)(?=})', re.UNICODE) # recupère le contenu de la footnotetext
 RnombreuxSauts = re.compile(r'((?<=\n)(\s+)(?=\S))', re.UNICODE) 
-Picts = open('fiches/images.txt', 'w', encoding = 'utf8')
-Refs = open('fiches/references.txt', 'w', encoding = 'utf8')
+Picts = open('fiches/images', 'w', encoding = 'utf8')
+Refs = open('fiches/references', 'w', encoding = 'utf8')
 Rtitresection = re.compile(r'(?<=\\section{)(.*)(?=})', re.UNICODE) #récupere le contenu (le titre)
 Rtitresubsection = re.compile(r'(?<=\\subsection{)(.*)(?=})', re.UNICODE) #récupere le contenu (le titre)
 Rtitresubsubsection = re.compile(r'(?<=\\subsubsection{)(.*)(?=})', re.UNICODE) #récupere le contenu (le titre)
@@ -165,7 +165,7 @@ def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe, nom_au
 				subsubsec += 1
 				parag = 0
 
-			if conclusion: 
+			if conclusion in line: 
 				EcrireSectionPrecedente(IDf, NbMotsSect, tailleMini, titre, contenutxt, RefIDsection, nom_auteur, date)
 
 

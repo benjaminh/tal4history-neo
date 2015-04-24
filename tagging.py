@@ -68,8 +68,13 @@ def normalise_keyword(keyword_file_path):
 					keystags = lafichekey.readlines()
 					keystags = list(map(lambda s: re.sub(r'\n', '', s), keystags)) #créer une list à partir du fichier 
 					for keystag in keystags:
-						keynorm = [key for key, value in iter(mydict.items()) if keystag in value] # remplace les valeurs par la clée correspondante à partir du dictionnaire élaboré précédement
-						KeyFichenorm.write(keynorm[0] + '\n')
+						keynorm = [key for key, value in iter(mydict.items()) if keystag in value] # retrouve la clée pour chaque valeurs correspondante à partir du dictionnaire élaboré précédement
+						try:						
+							KeyFichenorm.write(keynorm[0] + '\n')
+						except:
+							if keynorm == []:
+								print (keystag + '  fiche  ' + fichekey)
+						
 
 chemin_keywordfile = 'memoireMQkey.csv' #.csv de mots clef, avec les synonymes sur la même ligne
 motsclefs = build_keyword_regex(chemin_keywordfile)
