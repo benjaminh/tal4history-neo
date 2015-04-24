@@ -6,7 +6,7 @@ Auteurs:
 - Benjamin Hervy
 
 # Mise en place
-## Créer les dossier suivant en respectant l'arborescence
+## Créer les dossiers suivants en respectant l'arborescence
 - BeingClean
 - keywords
 - keywords/nonNormalised
