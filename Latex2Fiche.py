@@ -5,7 +5,7 @@ import os
 import re
 import Fichage
 import CleanLaTeX
-etape = 0
+etape = 1
 
 #renseigne ici le nom du fichier à cleaner en .tex
 Fichier_a_traiter = 'memoireMQ.tex' 

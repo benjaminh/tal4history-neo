@@ -21,8 +21,6 @@ Auteurs:
 
 ## Améliorations futures
 
-* Fichage.py : Images non prises en compte par l'add-on Writer2latex. Ces images sont correctement extraites mais la ligne \includegraphics est commentée dans le LaTeX
-* Fichage.py : Gestion des `itemize`. Il sont pour l'instant gérés comme de simple lignes de texte... idée à trouver... 
 * Gestion des liens entre fiches: plutôt que d'avoir des pondérations globales sur des liens indifférenciés; 2 options d'amélioration: 
 	- Ajouter la liste des mots-clef commun entre 2 fiches dans les propriétés du lien. Plus éventuellement la pondération de chacun des mots-clef. Problème: comment y accéder? 
 	- Créer un lien pour chaque mot clef commun. Possibilité de pondération de ces liens. Exemple: la fiche `A` contient 5 occurrences du mot-clef `x` et la fiche `B` en contient 10; alors le lien typé `x` entre ces fiches est pondéré de 5²/10. Problème: création de beaucoup de liens.

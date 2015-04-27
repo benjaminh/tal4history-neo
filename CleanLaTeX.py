@@ -10,6 +10,7 @@ Rcontenuit = re.compile(r'(?<=\\textit{)([^\}]*)(?=})', re.UNICODE) #recupère l
 RcommandeVide = re.compile(r'(\\\w*(\{\}|[\s\n]|\{[^\w\n]+\}))', re.UNICODE) # récupère les "mots" commençant par \ suivis de lettres (commande) puis "blanc" ou acolade contenant "non-lettre"
 Racolades = re.compile(r"{[^\w\n]*}", re.UNICODE) #recupère les acolades ne contenant que des symboles non mot (à remplacer par le contenu)
 RcontenuAcolades = re.compile(r'(?<={)([^\w\n]*)(?=})', re.UNICODE) # récupère le contenu des symboles non mot entre acolades
+#Ritem = re.compile(r'(?<=\\item)([^\\]*)(?=\\)(?s)', re.UNICODE) # OBSOLETE recupère le contenu de l'item 
 Rechapdecaractere = re.compile(r'(\\)(?=[\W_])', re.UNICODE) # recupère le \ avant les caractères échappés et les espaces
 RwithPict = re.compile(r'(?<=\\includegraphics)(.*)(?={)', re.UNICODE) #recupère les paramètre d'affichage de la taille de l'image (pour les supp)
 RcrochetPict = re.compile(r'(?<=\\caption)([^{]*)(?={)(?s)', re.UNICODE) #recupère les paramètre de la légende (pour les supp)
@@ -19,6 +20,8 @@ Rcrochetsubsubsection = re.compile(r'(?<=\\subsubsection)(.*)(?={)', re.UNICODE)
 Rcrochetparagraph = re.compile(r'(?<=\\paragraph)(.*)(?={)', re.UNICODE) #recupère les paramètre du titre (pour les supp)
 RdebutLigne = re.compile(r'(\w|\\footnote|«|\(|~|\:| |\t)', re.UNICODE)
 RFauxSaut = re.compile(r'([ \t][ \t]*\n)', re.UNICODE)
+Rcontenuindex = re.compile(r'(?<=\\index{)([^}]*)(?=})') #OBSOLÈTE (car le contenu est souvent inutile) récupère le contenu d'une commande index
+Rindex = re.compile(r'(\\index{[^}]*})') # recupère l'ensemble de la commande index pour la supprimer
 
 #  end regex  ###########################################################
 
@@ -109,7 +112,7 @@ def Clean(OrigineFile, step):
 					ligne = ligne.replace(e[j],f[j])
 					j += 1
 
-				#remplace les caractères spéciaux perdus entre acolade (au sein d'un zone entre acolade souvent) par le même caractère sans les sans les acolades
+				#remplace les caractères spéciaux perdus entre acolade (au sein d'un zone entre acolade souvent, ex: "\footnote{hello world [2015{]}}") par le même caractère sans les sans les acolades
 				#au lieux de les virer: ligne = re.sub(r"{[^\w\n]*}", "", ligne) et de perdre des crochets perdus entre acolade par exemple...
 				g = re.findall(Racolades, ligne)
 				h = re.findall(RcontenuAcolades, ligne)
@@ -117,12 +120,18 @@ def Clean(OrigineFile, step):
 				while k<len(g):
 					ligne = ligne.replace(g[k],h[k])
 					k += 1
-				
+
+				if re.match(r'(\[Warning:[^\]]*\])', ligne):
+					ligne = re.sub(r'(\[Warning:[^\]]*\])', '', ligne) # supprime les warning image ignored... tant pis pour elles! 
+					print('Problème avec une image')
+				ligne = re.sub(r'\\item', '\n - ', ligne) #remplace les \item par des tiret en sautant une ligne auparavant.
 				ligne = re.sub(Rechapdecaractere, "", ligne)
 				ligne = re.sub(RcommandeVide, "", ligne) #je ne sais pas pourquoi ça ne marche pas sur footnotemark en pratique
 				ligne = re.sub(Rechapdecaractere, "", ligne)
 				ligne = re.sub(r"{\\textgreater}", "", ligne)
 				ligne = re.sub(r"{\\textquotedbl}", "", ligne)
+				ligne = re.sub(r'{\\dots}', '...', ligne)
+				ligne = re.sub(r'{\oe}', 'œ', ligne)
 				ligne = re.sub(r"{\\textless}", "", ligne)
 				ligne = re.sub(r"^\\\w*(\{\}|[\s\n]|\{[^\w\n]+\})", "", ligne)
 				ligne = re.sub(r"{[^\w\n]*}", "", ligne)
@@ -134,6 +143,7 @@ def Clean(OrigineFile, step):
 				ligne = re.sub(Rcrochetparagraph, "", ligne)
 				ligne = re.sub(r'\\clearpage', "", ligne)
 				ligne = re.sub(r'\\footnotemark', "", ligne)
+				ligne = re.sub(Rindex, '', ligne)
 
 			#enlève les passages à la ligne intempestifs dans un même paragraphe
 				if re.match(RdebutLigne, ligne) and not re.match(RFauxSaut, ligne):
