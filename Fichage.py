@@ -19,10 +19,10 @@ Rtitresubsection = re.compile(r'(?<=\\subsection{)(.*)(?=})', re.UNICODE) #récu
 Rtitresubsubsection = re.compile(r'(?<=\\subsubsection{)(.*)(?=})', re.UNICODE) #récupere le contenu (le titre)
 Rtitreparagraph = re.compile(r'(?<=\\paragraph{)(.*)(?=})', re.UNICODE) #récupere le contenu (le titre)
 
-RibidOpCit = re.compile(r'ibid|op\.\s?cit\.', re.IGNORECASE)
-Ribid = re.compile(r'ibid', re.IGNORECASE)
-Ropcit = re.compile(r'op\.\s?cit\.', re.IGNORECASE)
-RopCitcontenu = re.compile(r'(([A-Z]{1})([^A-Z]*)(?=op\.\s?cit.))', re.UNICODE) # catch ce qui précède un op. cit. jusqu'à rencontrer une lettre majuscule -> donne l'élément cité.
+RibidOpCit = re.compile(r'(ibid|op\.\s?cit\.)', re.IGNORECASE)
+Ribid = re.compile(r'(ibid)', re.IGNORECASE)
+RopCit = re.compile(r'(op\.\s?cit\.)', re.IGNORECASE) # catch les op.cit.
+RopCitcontenu = re.compile(r'([A-Z]*[^A-Z]*)(?=op\.\s?cit.)', re.UNICODE) # catch ce qui précède un op. cit. jusqu'à rencontrer une lettre majuscule -> donne l'élément cité.
 Rpages = re.compile(r'(\Wpp?\W?\W?[\d\s,-]+)', re.UNICODE) # catch les numéros de page dans une citation
 
 
@@ -75,13 +75,14 @@ def References(thisline, RefID, dicorefs):
 	for refere in linereferences:
 		RefID += 1
 		RefIDLigne.append(RefID)
-		if not re.match(RibidOpCit, refere):
+
+		if not re.search(RibidOpCit, refere):
 			Refs.write(str(RefID) + '@' + refere + '\n')
 			dicorefs[str(RefID)] = refere
 
 		else:
-			if re.match(Ribid, refere):
-				print('ibid. found in footnote n°' + str(RefID) + ': check it manualy please!')
+			if re.search(Ribid, refere):
+				print('ibid. found in footnote n°' + str(RefID) + ': check the result manualy please!')
 				pointeRefPrec = RefID - 1
 				RefPrec = dicorefs[str(pointeRefPrec)] #une clef de dico doit être un string
 				#magouille pour essayer de changer les numéro de page de la ref si ibid
@@ -94,23 +95,25 @@ def References(thisline, RefID, dicorefs):
 						Refs.write(str(RefID) + '@' + RefPrec + '\n')
 						dicorefs[str(RefID)] = RefPrec	# Pour le fontionnement logique de ce genre de références en footnote, la reférence est ajoutée avec un Id incrémenté comme une référence différente (même si il se peut que ce soit un copie-colle parfait)... 
 
-			if re.match(RopCit, refere): 
-				print('op.cit. found in footnote n°' + str(RefID) + ': check it please!')
-				versQuoi = re.findall(RopCitcontenu, refere) 
+			if re.search(RopCit, refere): 
+				print('op.cit. found in footnote n°' + str(RefID) + ': check the result manualy please!')
+				versQuoi = re.findall(RopCitcontenu, refere)
+				versQuoi = versQuoi[0]
 				ref_prec = [value for key, value in iter(dicorefs.items()) if versQuoi in value] # cherche dans le dico une valeur qui correpsond à ce qu'on à catché comme étant op. cité. 
-				Ref_Prec = set(ref_prec) #en cas d'un précédent de op. cit. ou de ibid. sans indication de pages, la référence est doublée, il éviter ces doublons pour la ligne de code suivante
-				if len(Ref_Prec) != 1: # être sur qu'on ne remplace pas par n'importe quoi
-					print('impossible to determine the pointed ref by the mention op.cit. found in footnote n°' + str(RefID) + ': check do please (replace by explicit value)!')
+				RefPrec = list(set(ref_prec)) #en cas d'un précédent de op. cit. ou de ibid. sans indication de pages, la référence est doublée, il éviter ces doublons pour la ligne de code suivante
+				if len(RefPrec) != 1: # être sur qu'on ne remplace pas par n'importe quoi
+					print('impossible to determine the pointed ref by the mention op.cit. found in footnote n°' + str(RefID) + ': do it manualy please (replace by explicit value)!')
 					Refs.write(str(RefID) + '@' + 'PAS DE OP. CIT. TROUVÉ' + '\n')
 				else:
+					RefPrec = RefPrec[0]
+					print (RefPrec)
+					RefPrec = re.sub(Rpages, '', RefPrec) #dégage les numéros de page dans la ref recupérée
 					pages_now = re.findall(Rpages, refere) # catch les nombres ou espaces ou virgule ou tirets après p ou pp ou p. ou pp. 
-					pages_prec = re.findall(Rpages, RefPrec) # catch les nombres ou espaces ou virgule ou tirets après un p ou pp ou p. ou pp. 
-					try: 
-						RefPrec = RefPrec.replace(pages_prec[0], pages_now[0])
-					except:
-						if pages_prec == [] or pages_now == []:
-							Refs.write(str(RefID) + '@' + RefPrec + '\n')
-							dicorefs[str(RefID)] = RefPrec	# Pour le fontionnement logique de ce genre de références en footnote, la reférence est ajoutée avec un Id incrémenté comme une référence différente (même si il se peut que ce soit un copie-colle parfait)... 
+					if pages_now != []:
+						RefPrec = RefPrec + pages_now[0]
+					Refs.write(str(RefID) + '@' + RefPrec + '\n')
+					dicorefs[str(RefID)] = RefPrec	# Pour le fontionnement logique de ce genre de références en footnote, la reférence est ajoutée avec un Id incrémenté comme une référence différente (même si il se peut que ce soit un copie-colle parfait)... 
+
 	return RefIDLigne
 
 
@@ -118,13 +121,14 @@ def References(thisline, RefID, dicorefs):
 #########################################################
 ##########################################################
 ####fonction principale qui est appelée par LaTeX2Fiche
-def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe, nom_auteur, date):
+def decoupe(OrigineFile, conclusion, tailleMini, step, decoupeParagraphe, nom_auteur, date, DossierImage):
 	OrigineFileName = re.sub('.tex', '', OrigineFile)
 	extensionEtapePrec = '.Step' + str(step-1) + '.txt'
 	FichierPropre = 'BeingClean/' + OrigineFileName + extensionEtapePrec
 	dicoRefs = {'a': 'value'} #initialise un dico pour pouvoir repêcher les références en cas de ibidem
-	DossierImage = re.sub('_', '', OrigineFileName)
-	DossierImage = DossierImage + '-img/'
+	if DossierImage == 'automatic': #pour retrouver le dossier Image tel que Writer2Latex le crée
+		DossierImage = re.sub('_', '', OrigineFileName)
+		DossierImage = DossierImage + '-img/'
 	RpictName = re.compile(r"(?<=\\includegraphics{" + re.escape(DossierImage) + r')(.*)(?=})', re.UNICODE) #recupère le nom de l'image (dans son dossier)
 
 	with open(FichierPropre, 'r', encoding = 'utf8') as fichierpropre:

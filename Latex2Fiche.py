@@ -8,7 +8,7 @@ import CleanLaTeX
 etape = 1
 
 #renseigne ici le nom du fichier à cleaner en .tex
-Fichier_a_traiter = 'memoireMQ.tex' 
+Fichier_a_traiter = 'memoireMQ.copy.tex' 
 
 Auteur_du_document = 'Matthieu Quantin' #prénom nom
 Date_de_publication_du_document = '2014-06-04' # yyyy-mm-dd (format ISO8601 pour les date.)
@@ -17,6 +17,7 @@ Date_de_publication_du_document = '2014-06-04' # yyyy-mm-dd (format ISO8601 pour
 Mot_apres_la_derniere_fiche = 'CONCLUSION GÉNÉRALE' # pour écrire et arréter l'écriture de la dernière partie avant la conclusion... 
 Taille_minimale = 150 #taille minimum d'une section pour en 'extraire' une fiche (en nombre de mots)
 decoupe_paragraphe = False  #mettre "True" pour considérer les paragraphes comme des subsubsubsection et en faire des fiches, ou bien mettre "False" pour les laisser dans des fiches mères
+DossierImage = 'memoireMQ-img' # écrire 'automatic' si le LaTeX provient de Writer2Latex. Sinon mettre le nom du dossier où sont rangées les images. 
 
 ##################################### 
 
@@ -26,4 +27,4 @@ decoupe_paragraphe = False  #mettre "True" pour considérer les paragraphes comm
 etape += CleanLaTeX.AcoladeClose(Fichier_a_traiter, etape)
 etape += CleanLaTeX.CrochetClose(Fichier_a_traiter, etape)
 etape += CleanLaTeX.Clean(Fichier_a_traiter, etape)
-Fichage.decoupe(Fichier_a_traiter, Mot_apres_la_derniere_fiche, Taille_minimale, etape, decoupe_paragraphe, Auteur_du_document, Date_de_publication_du_document)
+Fichage.decoupe(Fichier_a_traiter, Mot_apres_la_derniere_fiche, Taille_minimale, etape, decoupe_paragraphe, Auteur_du_document, Date_de_publication_du_document, DossierImage)
